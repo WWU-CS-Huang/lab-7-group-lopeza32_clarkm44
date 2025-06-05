@@ -10,7 +10,22 @@ public class Huffman {
         return "Hello World!";
     }
     public 
-    
+
+
+	hello aldo
+
+
+
+	hello aldo
+
+
+
+
+	hello aldo
+
+
+
+	goodbye aldo
 
     public static void main(String[] args) {
         System.out.println(new Huffman().getGreeting());
