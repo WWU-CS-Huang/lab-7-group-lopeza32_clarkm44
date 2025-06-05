@@ -19,6 +19,9 @@ dependencies {
     // Use JUnit test framework.
     testImplementation libs.junit
 
+    implementation files('libs/heap.jar')
+    implementation files('libs/avl.jar')
+
     // This dependency is used by the application.
     implementation libs.guava
 }
