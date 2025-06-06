@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
-
+import java.util.PriorityQueue;
 public class Huffman {
     // node class to build tree, node has a char and a frequency if it is a leaf, if not, just a frequency will be stored.
     static class Node implements Comparable<Node> {
@@ -52,7 +52,7 @@ public class Huffman {
 
 
     
-    public static HashMap countFrequencies(String input){
+    public static HashMap<Character, Integer> countFrequencies(String input){
 	HashMap<Character, Integer> result = new HashMap<Character, Integer>();
 	char[] text = input.toCharArray();
 	for (char k : text){
@@ -64,25 +64,22 @@ public class Huffman {
 	}
 	return result;
     }
-
-
     
     // recursive method to perform dfs.
     public static void ETable(Node node, String code, HashMap<Character, String> map){
 	if(node.isLeaf()){
 	    map.put(node.data, code);
+	    return;
 	}
-	buildETable(node.left, code + "0", map);
-	buildETable(node.right, code + "1", map);
+	ETable(node.left, code + "0", map);
+	ETable(node.right, code + "1", map);
     }
     // build encoding table - using dfs helper method to traverse through whole tree and find each character keeping track of the path/code to char.
     public static HashMap<Character, String> buildETable(Node root){
-	HashMap<Character, String> eTable = new HashMap<>();
+	HashMap<Character, String> eTable = new HashMap<Character, String>();
 	ETable(root, "", eTable);
 	return eTable;
     }
-
-
     
     // build tree (minheap)
     public static Node buildTree(HashMap<Character, Integer> freqMap) {
@@ -97,54 +94,32 @@ public class Huffman {
 	while(tree.size() > 1) {
 	    Node left = tree.poll();
 	    Node right = tree.poll();
-	    Node parent = new Node(left, right);
+	    Node parent = new Node(left.freq + right.freq,left, right);
 	    tree.add(parent);
 	}
-
 	//should be root of minHeap
 	return tree.poll();
     }
-    
-    
-	
-    public static void main(String[] args) throws FileNotFoundException{
-	String fileName = args[0];
-	Scanner scanner = new Scanner(new File(fileName));
-	HashMap<Character, Integer> charFreq = new HashMap<Character, Integer>();
-	StringBuilder sb = new StringBuilder();
-	while(scanner.hasNextLine()){
-	    sb.append(scanner.nextLine());
-	}
-	String input = sb.toString();
-	charFreq = countFrequencies(input);
-	for(char key : charFreq.keySet()){
-	    System.out.println("The frequency of " + key +" is " + charFreq.get(key));
-	}
-    }
-
-
     
     // traversing through tree to find each char, keeping track of code for each char
     public static String decode(Node root, String input){
 	StringBuilder code = new StringBuilder();
 	Node current = root;
 	int len = input.length();
-
-	for(int i = 0; i < len; i++){
-	    if (input.charAt(i) == '0') {
+	char[] cInput = input.toCharArray();
+	for(char c : cInput){
+	    if(c == '0'){
 		current = current.left;
 	    } else {
 		current = current.right;
 	    }
-	    if (current.left == null && current.right == null){
+	    if(current.left == null && current.right == null){
 		code.append(current.data);
 		current = root;
 	    }
 	}
 	return code.toString();
     }
-
-
     
     // grabbing code from encoding table for each character in the input string
     public static String encode(String input, HashMap<Character, String> eTable){
@@ -153,5 +128,32 @@ public class Huffman {
 	    ans.append(eTable.get(c));
 	}
 	return ans.toString();
+    }
+
+    public static void main(String[] args) throws FileNotFoundException{
+	String fileName = args[0];
+	Scanner scanner = new Scanner(new File(fileName));
+	HashMap<Character, Integer> charFreq = new HashMap<Character, Integer>();
+	StringBuilder sb = new StringBuilder();
+	HashMap<Character, String> eTable = new HashMap<Character, String>();
+	while(scanner.hasNextLine()){
+	    sb.append(scanner.nextLine());
+	}
+	String input = sb.toString();
+	//System.out.println("Input string: " + input);
+	charFreq = countFrequencies(input);
+	Node treeRoot = buildTree(charFreq);
+	eTable = buildETable(treeRoot);
+	String eString = encode(input, eTable);
+	//System.out.println("Encoded string: " + eString);
+	String dString = decode(treeRoot, eString);
+	//System.out.println("Decoded string: " + dString);
+	if(input.length() < 100){
+	    System.out.println("Input string: " + input);
+	    System.out.println("Encoded string: " + eString);
+	    System.out.println("Decoded string: " + dString);
+	}
+	System.out.println("Decoded equals input: " + input.equals(dString));
+	System.out.println("Compression ratio: " + ((double)eString.length() / (double)input.length()/(double)8));
     }
 }
